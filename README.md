@@ -1,36 +1,42 @@
-Template
+# Template
+
 A robust backend API built with TypeScript and Nest.js for managing [your domain, e.g., user data, inventory, etc.].
 
-Overview
+## Overview
+
 This project is a TypeScript-based backend application designed with scalability, type safety, and maintainability in mind. It leverages modern development practices to ensure smooth collaboration and deployment.
 
-Key Features
-Base Controller/Service: A reusable base layer for all model-specific controllers and services, promoting DRY (Don’t Repeat Yourself) principles.
-DTOs for Filtering: Data Transfer Objects (DTOs) to handle input validation and filtering, ensuring clean and secure data handling.
-Logging Middleware: Custom middleware to log requests, including response times, for performance monitoring and debugging.
-AllExceptionFilters: Global exception filters to gracefully handle errors thrown by controllers, providing consistent error responses.
-Type Safety: Configured with noImplicitAny and strictNullChecks in TypeScript for stronger type security and fewer runtime errors.
+## Key Features
 
-Getting Started
-Prerequisites
-Node.js (v16 or higher)
-npm or yarn
+- **Base Controller/Service**: A reusable base layer for all model-specific controllers and services, promoting DRY (Don’t Repeat Yourself) principles.
+- **DTOs for Filtering**: Data Transfer Objects (DTOs) to handle input validation and filtering, ensuring clean and secure data handling.
+- **Logging Middleware**: Custom middleware to log requests, including response times, for performance monitoring and debugging.
+- **AllExceptionFilters**: Global exception filters to gracefully handle errors thrown by controllers, providing consistent error responses.
+- **Type Safety**: Configured with `noImplicitAny` and `strictNullChecks` in TypeScript for stronger type security and fewer runtime errors.
 
-Installation
-Clone the repository:
-git clone <your-repo-url>
-cd <project-name>
+## Getting Started
 
-Install dependencies:
-npm install
+### Prerequisites
 
-Configure environment variables:
-Copy .env.example to .env and update the values as needed.
+- Node.js (v16 or higher)
+- npm or yarn
 
-Run the project:
-npm start
+### Installation
 
-Project Structure
+1. Clone the repository:
+   ```bash
+   git clone <your-repo-url>
+   cd <project-name>
+2. Install dependencies: 
+   ```bash
+   npm install
+3. Configure environment variables
+   Copy .envexample file to .env and update the values as needed
+
+4. Run the project
+   npm start
+
+## Project Structure
 src/
 ├── controllers/    # Base and model-specific controllers
 ├── services/       # Base and model-specific services
@@ -39,7 +45,7 @@ src/
 ├── filters/        # AllExceptionFilters for error handling
 └── ...
 
-Development Notes
-TypeScript Config: The tsconfig.json enforces noImplicitAny and strictNullChecks for better type safety. Update types as needed when extending controllers or services.
-Logging: Response times are logged via middleware. Check logs in <log-location> for details.
-Error Handling: Use AllExceptionFilters to catch and format controller exceptions consistently.
+## Development Notes
+- TypeScript Config: The tsconfig.json enforces noImplicitAny and strictNullChecks for better type safety. Update types as needed when extending controllers or services.
+- Logging: Response times are logged via middleware. Check logs in <log-location> for details.
+- Error Handling: Use AllExceptionFilters to catch and format controller exceptions consistently.
