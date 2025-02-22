@@ -37,13 +37,13 @@ This project is a TypeScript-based backend application designed with scalability
    npm start
 
 ## Project Structure
-src/
-├── controllers/    # Base and model-specific controllers
-├── services/       # Base and model-specific services
-├── dtos/           # Data Transfer Objects for filtering and validation
-├── middleware/     # Logging middleware and other utilities
-├── filters/        # AllExceptionFilters for error handling
-└── ...
+- `src/`
+  - `controllers/` - Base and model-specific controllers
+  - `services/` - Base and model-specific services
+  - `dtos/` - Data Transfer Objects for filtering and validation
+  - `middleware/` - Logging middleware and other utilities
+  - `filters/` - AllExceptionFilters for error handling
+  - (additional files/folders as needed)
 
 ## Development Notes
 - TypeScript Config: The tsconfig.json enforces noImplicitAny and strictNullChecks for better type safety. Update types as needed when extending controllers or services.
