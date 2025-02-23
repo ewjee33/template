@@ -1,49 +1,27 @@
-import { Injectable } from '@nestjs/common';
-import { Model, UpdateQuery } from 'mongoose';
-import { InjectModel } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Injectable, ConflictException, Logger } from '@nestjs/common';
+
+// Generic type T for entity flexibility (not tied to Mongoose Document)
 @Injectable()
-export abstract class BaseService<T extends Document, DTO> {
-  constructor(
-    @InjectModel((this! as typeof BaseService).modelName) 
-    protected readonly model: Model<T>
-  ) {}
+export abstract class BaseService<T> {
+  protected readonly logger = new Logger(this.constructor.name);
 
-  static get modelName(): string {
-    throw new Error(`Model name not implemented for ${this.name}`);
+  // Validate an entity exists, throwing an exception if not
+  protected ensureExists(entity: T | null, entityName: string): T {
+    if (!entity) {
+      throw new ConflictException(`${entityName} not found`);
+    }
+    return entity;
   }
 
-  async create(dto: DTO): Promise<T> {
-    try {
-      const newEntity = new this.model(dto);
-      return await newEntity.save();
-    } catch (error) {
-      console.error(`Error creating entity:`, error);
-      throw new Error('Failed to create entity');
+  // Generic validation wrapper
+  protected validate(condition: boolean, errorMessage: string): void {
+    if (!condition) {
+      throw new ConflictException(errorMessage);
     }
   }
 
-  async findOne(id: string | number): Promise<T | null> {
-    try {
-      return await this.model.findById(id).exec();
-    } catch (error) {
-      console.error(`Error finding entity:`, error);
-      throw new Error('Failed to find entity');
-    }
+  // Log an operation (could be extended to a logging service)
+  protected logOperation(operation: string, details?: any): void {
+    this.logger.log(`${operation} executed`, details);
   }
-
-  async update(id: string | number, dto: Partial<DTO>): Promise<T> {
-    try {
-      const updatedEntity = await this.model.findByIdAndUpdate(id, dto as UpdateQuery<T>, { new: true }).exec();
-      if (!updatedEntity) {
-        throw new Error('Entity not found');
-      }
-      return updatedEntity;
-    } catch (error) {
-      console.error(`Error updating entity:`, error);
-      throw new Error('Failed to update entity');
-    }
-  }
-
-  // Add more common methods as needed
 }
