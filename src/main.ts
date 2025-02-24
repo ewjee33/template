@@ -1,7 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
-import { ResponseLoggingMiddleware } from './middleware/responseLogginMIddleware';
+import { ResponseLoggingMiddleware } from './middleware/responseLogginMiddleware';
 import { AllExceptionsFilter } from './middleware/allExceptionsFilter';
 
 async function bootstrap() {
@@ -13,8 +13,9 @@ async function bootstrap() {
       enableImplicitConversion: true, // Automatically convert types
     },
   }));
-  app.use(ResponseLoggingMiddleware);
+  const responseLoggingMiddleware = app.get(ResponseLoggingMiddleware);
+  app.use(responseLoggingMiddleware.use.bind(responseLoggingMiddleware));
   app.useGlobalFilters(new AllExceptionsFilter());
-  await app.listen(Number(process.env.PORTNUMBER));
+  await app.listen(Number(process.env.PORTNUMBER) || 3000);
 }
 bootstrap();

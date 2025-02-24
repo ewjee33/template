@@ -6,13 +6,13 @@ import { UserModule } from './user/user.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Logger } from './utils/logger';
 import { ConfigModule } from '@nestjs/config';
-
+import { ResponseLoggingMiddleware } from './middleware/responseLogginMiddleware';
 @Module({
   imports: [ConfigModule.forRoot({ isGlobal: true }), 
     UserModule , 
     MongooseModule.forRoot(process.env.DB_URL ?? "DB URL"), ],
   controllers: [AppController, UserController],
-  providers: [AppService, Logger],
+  providers: [ResponseLoggingMiddleware, AppService, Logger],
   
 })
 export class AppModule {}
