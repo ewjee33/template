@@ -1,5 +1,5 @@
 # 0.0.3
-- 
+- Added Redis
 
 # 0.0.2
 - MongoDB Transaction , Add another layer of Repository

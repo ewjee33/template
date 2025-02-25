@@ -15,6 +15,7 @@ This project is a TypeScript-based backend application designed with scalability
 - **Type Safety**: Configured with `noImplicitAny` and `strictNullChecks` in TypeScript for stronger type security and fewer runtime errors.
 - **Transactional Support**: Controllers needing multi-document updates (e.g., UserController) can create and manage Mongoose sessions for atomic operations, while BaseController remains session-agnostic.
 - **Session-Ready Repository**: BaseRepository functions (create, findOne, update) include an optional session parameter (ClientSession | null) to support transactions when provided by controllers or services.
+- **Redis Caching**: Integrated Redis for caching to enhance performance by reducing database load, with support in BaseService for caching entity lookups and updates.
 
 ## Getting Started
 
@@ -55,3 +56,7 @@ This project is a TypeScript-based backend application designed with scalability
    - BaseController: Provides a RESTful interface for standard CRUD operations without session management, keeping it reusable and lightweight.
    - Custom Controllers: For multi-document updates (e.g., creating a user and profile together), controllers like UserController can create a Mongoose ClientSession and pass it to service/repository methods. 
    - BaseRepository: All methods (create, findOne, update) accept an optional session: ClientSession | null parameter, defaulting to null for non-transactional use. This enables seamless integration with transactions when a session is provided by the controller.
+- Redis Caching:
+   - Integrated via CacheModule with cache-manager-redis-store for Redis support.
+   - BaseService includes caching logic for entity retrieval (findOne) and updates (update), using Redis to store frequently accessed data.
+   - Configure Redis settings in .env (REDIS_HOST, REDIS_PORT, REDIS_TTL). Adjust TTL or caching strategies in service methods as needed.
