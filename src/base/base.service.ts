@@ -1,12 +1,13 @@
 // base.service.ts
-import { Injectable, ConflictException, Logger } from '@nestjs/common';
+import { Injectable, Inject , ConflictException, Logger } from '@nestjs/common';
+import { CACHE_MANAGER , Cache } from '@nestjs/cache-manager';
 import { BaseRepository } from './base.repository';
 import { Document, ClientSession } from 'mongoose';
 
 @Injectable()
 export abstract class BaseService<T extends Document, DTO> {
   protected readonly logger = new Logger(this.constructor.name);
-
+  constructor(@Inject(CACHE_MANAGER) protected readonly cacheManager: Cache) {}
   protected abstract get repository(): BaseRepository<T, DTO>;
 
   async create(createDto: DTO, session: ClientSession | null = null): Promise<T> {
