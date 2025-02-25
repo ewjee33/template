@@ -12,7 +12,7 @@ export class UserService extends BaseService<UserDocument , CreateUserDto> {
   protected get repository(): UserRepository {
     return this.userRepository;
   }
-  
+
   static get modelName(): string {
     return 'User';
   }

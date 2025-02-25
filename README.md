@@ -13,6 +13,8 @@ This project is a TypeScript-based backend application designed with scalability
 - **Logging Middleware**: Custom middleware to log requests, including response times, for performance monitoring and debugging.
 - **AllExceptionFilters**: Global exception filters to gracefully handle errors thrown by controllers, providing consistent error responses.
 - **Type Safety**: Configured with `noImplicitAny` and `strictNullChecks` in TypeScript for stronger type security and fewer runtime errors.
+- **Transactional Support**: Controllers needing multi-document updates (e.g., UserController) can create and manage Mongoose sessions for atomic operations, while BaseController remains session-agnostic.
+- **Session-Ready Repository**: BaseRepository functions (create, findOne, update) include an optional session parameter (ClientSession | null) to support transactions when provided by controllers or services.
 
 ## Getting Started
 
@@ -49,3 +51,7 @@ This project is a TypeScript-based backend application designed with scalability
 - TypeScript Config: The tsconfig.json enforces noImplicitAny and strictNullChecks for better type safety. Update types as needed when extending controllers or services.
 - Logging: Response times are logged via middleware. Check logs in <log-location> for details.
 - Error Handling: Use AllExceptionFilters to catch and format controller exceptions consistently.
+- Transactional Operations:
+   - BaseController: Provides a RESTful interface for standard CRUD operations without session management, keeping it reusable and lightweight.
+   - Custom Controllers: For multi-document updates (e.g., creating a user and profile together), controllers like UserController can create a Mongoose ClientSession and pass it to service/repository methods. 
+   - BaseRepository: All methods (create, findOne, update) accept an optional session: ClientSession | null parameter, defaulting to null for non-transactional use. This enables seamless integration with transactions when a session is provided by the controller.
