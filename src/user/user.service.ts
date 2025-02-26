@@ -8,7 +8,7 @@ import { UserRepository } from './user.repository';
 export class UserService extends BaseService<UserDocument , CreateUserDto> {
   constructor(private readonly userRepository: UserRepository , 
     @Inject(CACHE_MANAGER) cacheManager: Cache) {
-    super(cacheManager);
+    super(cacheManager , 'user');
   }
 
   protected get repository(): UserRepository {

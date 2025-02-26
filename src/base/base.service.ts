@@ -7,8 +7,11 @@ import { Document, ClientSession } from 'mongoose';
 @Injectable()
 export abstract class BaseService<T extends Document, DTO> {
   protected readonly logger = new Logger(this.constructor.name);
-  constructor(@Inject(CACHE_MANAGER) protected readonly cacheManager: Cache) {}
-  protected abstract get repository(): BaseRepository<T, DTO>;
+  constructor(
+    @Inject(CACHE_MANAGER) protected readonly cacheManager: Cache,
+    private readonly entityName: string,) {}
+  
+    protected abstract get repository(): BaseRepository<T, DTO>;
 
   async create(createDto: DTO, session: ClientSession | null = null): Promise<T> {
     this.logOperation('Creating entity', createDto);
@@ -25,19 +28,42 @@ export abstract class BaseService<T extends Document, DTO> {
   async findOne(id: string | number, session: ClientSession | null = null): Promise<T> {
     return this.wrapAsyncOperation(
       async () => {
+        // 1. Define a cache key specific to the ID
+        const cacheKey = `${this.entityName}:${id}`;
+
+        // 2. Check Redis for cached result
+        const cachedResult = await this.cacheManager.get<string>(cacheKey);
+        if (cachedResult) {
+          return JSON.parse(cachedResult); // Return cached entity
+        }
+
+        // 3. If not in cache, query the database
         const entity = await this.repository.findOne(id, session);
-        return this.ensureExists(entity, 'Entity');
+
+        // 4. Ensure entity exists (your existing logic)
+        const result = this.ensureExists(entity, 'Entity');
+
+        // 5. Cache the result after successful query
+        await this.cacheManager.set(cacheKey, JSON.stringify(result),  3600 );
+
+        return result;
       },
       'Failed to find entity'
     );
   }
 
-  async update(id: string | number, dto: Partial<DTO>, session: ClientSession | null = null): Promise<T> {
+  async update(id: string | number, updateDto: Partial<DTO>, session: ClientSession | null = null): Promise<T> {
     return this.wrapAsyncOperation(
       async () => {
-        const entity = await this.repository.update(id, dto, session);
-        this.ensureExists(entity, 'Entity');
-        return entity;
+        // 1. Update the entity via the repository
+        const updatedEntity = await this.repository.update(id, updateDto, session);
+        this.ensureExists(updatedEntity, 'Entity');
+
+        // 2. Invalidate the cache for this entity
+        const cacheKey = `${this.entityName}:${id}`; // e.g., "user:123"
+        await this.cacheManager.del(cacheKey);
+
+        return updatedEntity;
       },
       'Failed to update entity'
     );
