@@ -28,27 +28,56 @@ export abstract class BaseService<T extends Document, DTO> {
   async findOne(id: string | number, session: ClientSession | null = null): Promise<T> {
     return this.wrapAsyncOperation(
       async () => {
-        // 1. Define a cache key specific to the ID
         const cacheKey = `${this.entityName}:${id}`;
+        const lockKey = `${cacheKey}:lock`;
 
-        // 2. Check Redis for cached result
-        const cachedResult = await this.cacheManager.get<string>(cacheKey);
-        if (cachedResult) {
-          return JSON.parse(cachedResult); // Return cached entity
+        // 1. Check cache first
+        let cachedResult: string | null;
+        try {
+          cachedResult = await this.cacheManager.get<string>(cacheKey);
+          if (cachedResult) {
+            return JSON.parse(cachedResult);
+          }
+        } catch (error: unknown) {
+          this.logger.warn(`Cache get failed: ${(error instanceof Error ? error.message : String(error))}`);
         }
 
-        // 3. If not in cache, query the database
-        const entity = await this.repository.findOne(id, session);
+        // 2. Try to acquire a lock
+        let acquiredLock: boolean = false;
+        try {
+          // Type assertion for nx option; returns true if set, false if key existed
+          const lockSet = await this.cacheManager.set(lockKey, '1', 10);
+          acquiredLock = lockSet !== undefined && lockSet !== null; // Handle Redis-specific return
+        } catch (error: unknown) {
+          this.logger.warn(`Lock acquisition failed: ${(error instanceof Error ? error.message : String(error))}`);
+        }
 
-        // 4. Ensure entity exists (your existing logic)
-        const result = this.ensureExists(entity, 'Entity');
-
-        // 5. Cache the result after successful query
-        await this.cacheManager.set(cacheKey, JSON.stringify(result),  3600 );
-
-        return result;
+        if (acquiredLock) {
+          try {
+            // 3. Lock acquired: query DB and set cache
+            const entity = await this.repository.findOne(id, session);
+            this.ensureExists(entity, this.entityName);
+            try {
+              await this.cacheManager.set(cacheKey, JSON.stringify(entity), 3600);
+            } catch (error: unknown) {
+              this.logger.warn(`Cache set failed: ${(error instanceof Error ? error.message : String(error))}`);
+            }
+            return entity;
+          } finally {
+            // 4. Release the lock
+            try {
+              await this.cacheManager.del(lockKey);
+            } catch (error: unknown) {
+              this.logger.warn(`Lock release failed: ${(error instanceof Error ? error.message : String(error))}`);
+            }
+          }
+        } else {
+          // 5. Lock not acquired: wait and retry
+          await new Promise(resolve => setTimeout(resolve, 100));
+          return this.findOne(id, session); // Recursive retry
+        }
       },
-      'Failed to find entity'
+      `Failed to find ${this.entityName.toLowerCase()}`
     );
   }
 
