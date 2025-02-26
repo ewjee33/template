@@ -82,15 +82,18 @@ export abstract class BaseService<T extends Document, DTO> {
   }
 
   async update(id: string | number, updateDto: Partial<DTO>, session: ClientSession | null = null): Promise<T> {
+    this.logOperation('Updating entity', { id, updateDto });
     return this.wrapAsyncOperation(
       async () => {
-        // 1. Update the entity via the repository
         const updatedEntity = await this.repository.update(id, updateDto, session);
         this.ensureExists(updatedEntity, 'Entity');
 
-        // 2. Invalidate the cache for this entity
-        const cacheKey = `${this.entityName}:${id}`; // e.g., "user:123"
-        await this.cacheManager.del(cacheKey);
+        const cacheKey = `${this.entityName}:${id}`;
+        try {
+          await this.cacheManager.del(cacheKey);
+        } catch (error: unknown) {
+          this.logger.warn(`Cache invalidate failed: ${(error instanceof Error ? error.message : String(error))}`);
+        }
 
         return updatedEntity;
       },
