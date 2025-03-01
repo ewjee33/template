@@ -1,4 +1,4 @@
-import { Body, Controller, Param, ParseIntPipe, Post, Put, UseInterceptors , HttpException, HttpStatus} from '@nestjs/common';
+import { Body, Controller, Param, ParseIntPipe, Get , Post, Put, UseInterceptors , HttpException, HttpStatus} from '@nestjs/common';
 import { ClassSerializerInterceptor } from '@nestjs/common';
 
 @Controller()
@@ -13,6 +13,7 @@ export abstract class BaseController<T , DTO> {
   }
 
   @UseInterceptors(ClassSerializerInterceptor)
+  @Get(':id')
   async findOne(@Param('id', ParseIntPipe) id: number): Promise<T> {
     try {
         return await this.service.findOne(id);

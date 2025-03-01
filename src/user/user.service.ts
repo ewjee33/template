@@ -1,15 +1,20 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable , Inject} from '@nestjs/common';
+import { CACHE_MANAGER , Cache } from '@nestjs/cache-manager';
 import { BaseService } from '../base/base.service';
 import { UserDocument } from './user.schema';
-import { UpdateUserDto } from './dto/update-user.dto';
 import { CreateUserDto } from './dto/create-user.dto';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { UserRepository } from './user.repository';
 @Injectable()
-export class UserService extends BaseService<UserDocument, CreateUserDto> {
-  constructor(@InjectModel("User") private userModel: Model<UserDocument>) {
-    super(userModel);
+export class UserService extends BaseService<UserDocument , CreateUserDto> {
+  constructor(private readonly userRepository: UserRepository , 
+    @Inject(CACHE_MANAGER) cacheManager: Cache) {
+    super(cacheManager , 'user');
   }
+
+  protected get repository(): UserRepository {
+    return this.userRepository;
+  }
+
   static get modelName(): string {
     return 'User';
   }
