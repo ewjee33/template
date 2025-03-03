@@ -1,5 +1,5 @@
 // base.service.ts
-import { Injectable, Inject , ConflictException, Logger } from '@nestjs/common';
+import { Injectable, Inject , ConflictException, Logger, NotFoundException, InternalServerErrorException } from '@nestjs/common';
 import { CACHE_MANAGER , Cache } from '@nestjs/cache-manager';
 import { BaseRepository } from './base.repository';
 import { Document, ClientSession } from 'mongoose';
@@ -25,7 +25,7 @@ export abstract class BaseService<T extends Document, DTO> {
     );
   }
 
-  async findOne(id: string | number, session: ClientSession | null = null): Promise<T> {
+  async findOne(id: string , session: ClientSession | null = null): Promise<T> {
     return this.wrapAsyncOperation(
       async () => {
         const cacheKey = `${this.entityName}:${id}`;
@@ -103,7 +103,7 @@ export abstract class BaseService<T extends Document, DTO> {
 
   protected ensureExists(entity: T | null, entityName: string): T {
     if (!entity) {
-      throw new ConflictException(`${entityName} not found`);
+      throw new NotFoundException(`${entityName} not found`);
     }
     return entity;
   }
@@ -125,8 +125,13 @@ export abstract class BaseService<T extends Document, DTO> {
     try {
       return await operation();
     } catch (error) {
+      // If it's a known HttpException, rethrow it as-is
+      if (error instanceof NotFoundException || error instanceof ConflictException) {
+        throw error; // Preserves 404 or 409 as intended
+      }
+      // For other errors, provide a generic InternalServerError (500)
       const errorMsg = error instanceof Error ? error.message : String(error);
-      throw new ConflictException(`${errorMessage}: ${errorMsg}`);
+      throw new InternalServerErrorException(`${errorMessage}: ${errorMsg}`);
     }
   }
 }

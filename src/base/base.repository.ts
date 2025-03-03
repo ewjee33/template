@@ -1,6 +1,6 @@
 // base.repository.ts
 import { Injectable } from '@nestjs/common';
-import { Model, UpdateQuery, ClientSession } from 'mongoose';
+import { Model, UpdateQuery, ClientSession , Types } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 
@@ -21,16 +21,17 @@ export abstract class BaseRepository<T extends Document, DTO> {
       return await newEntity.save({ session }); // session is now ClientSession | null
     } catch (error) {
       console.error(`Error creating entity:`, error);
-      throw new Error('Failed to create entity');
+      throw error;
     }
   }
 
-  async findOne(id: string | number, session: ClientSession | null = null): Promise<T | null> {
+  async findOne(id: string , session: ClientSession | null = null): Promise<T | null> {
     try {
-      return await this.model.findById(id).session(session).exec(); // session is ClientSession | null
+      const objectId = new Types.ObjectId(id.toString());
+      return await this.model.findById(objectId).session(session).exec(); // session is ClientSession | null
     } catch (error) {
       console.error(`Error finding entity:`, error);
-      throw new Error('Failed to find entity');
+      throw error;
     }
   }
 
@@ -45,7 +46,7 @@ export abstract class BaseRepository<T extends Document, DTO> {
       return updatedEntity;
     } catch (error) {
       console.error(`Error updating entity:`, error);
-      throw new Error('Failed to update entity');
+      throw error;
     }
   }
 }

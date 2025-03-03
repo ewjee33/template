@@ -1,7 +1,10 @@
-import { Body, Controller, Param, ParseIntPipe, Get , Post, Put, UseInterceptors , HttpException, HttpStatus} from '@nestjs/common';
+import { Body, Controller, Param, ParseIntPipe, Get , Post, Put, UseInterceptors , HttpException, HttpStatus, UseFilters} from '@nestjs/common';
 import { ClassSerializerInterceptor } from '@nestjs/common';
+import { AllExceptionsFilter } from 'src/middleware/allExceptionsFilter';
+import { FindByIdDto } from 'src/user/dto/findUserById.dto';
 
 @Controller()
+@UseFilters(AllExceptionsFilter)
 export abstract class BaseController<T , DTO> {
   protected constructor(
     // Assuming you have a way to inject the service
@@ -14,12 +17,13 @@ export abstract class BaseController<T , DTO> {
 
   @UseInterceptors(ClassSerializerInterceptor)
   @Get(':id')
-  async findOne(@Param('id', ParseIntPipe) id: number): Promise<T> {
+  async findOne(@Param() params: FindByIdDto): Promise<T> {
     try {
-        return await this.service.findOne(id);
+        return await this.service.findOne(params.id);
     } catch(error) {
         this.logError('findOne', error);
-        throw new HttpException('Failed to find user', HttpStatus.INTERNAL_SERVER_ERROR);
+        throw error;
+        //throw new HttpException('Failed to find user', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
