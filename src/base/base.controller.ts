@@ -7,7 +7,6 @@ import { FindByIdDto } from 'src/base/dto/findEntityById.dto';
 @UseFilters(AllExceptionsFilter)
 export abstract class BaseController<T , DTO> {
   protected constructor(
-    // Assuming you have a way to inject the service
     protected readonly service: any
   ) {}
 
@@ -23,7 +22,6 @@ export abstract class BaseController<T , DTO> {
     } catch(error) {
         this.logError('findOne', error);
         throw error;
-        //throw new HttpException('Failed to find user', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -33,7 +31,7 @@ export abstract class BaseController<T , DTO> {
         return await this.service.create(dto);
     } catch(error) {
         this.logError('create', error);
-        throw new HttpException('Failed to create user', HttpStatus.INTERNAL_SERVER_ERROR);
+        throw error;
     }
   }
 
@@ -43,7 +41,7 @@ export abstract class BaseController<T , DTO> {
         return this.service.updateUser(id, dto);
     } catch(error) {
         this.logError('update', error);
-        throw new HttpException('Failed to update user', HttpStatus.INTERNAL_SERVER_ERROR);
+        throw error;
     }
   }
 

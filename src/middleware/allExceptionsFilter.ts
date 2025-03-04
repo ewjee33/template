@@ -7,13 +7,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
-    console.log("exception");
-    console.log(exception);
-    console.log(typeof exception);
-    console.log(exception instanceof BadRequestException);
-    console.log(exception instanceof NotFoundException);
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
-    console.log(status)
     let message = 'An unknown error occurred';
 
     // Handle specific HTTP exceptions from NestJS
@@ -56,8 +50,6 @@ export class AllExceptionsFilter implements ExceptionFilter {
         status = HttpStatus.FORBIDDEN; // 403
       }
     }
-    console.log("just before");
-    console.log(status);
     response
       .status(status)
       .json({
