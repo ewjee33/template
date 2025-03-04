@@ -1,3 +1,8 @@
+# 0.0.4
+- allExceptionsFilter used only on controllers
+- repositories / services now throwing original erros not new errors - bug fixed
+- added findUserById dtos
+
 # 0.0.3
 - Added Redis
 

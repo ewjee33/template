@@ -1,7 +1,7 @@
 import { Body, Controller, Param, ParseIntPipe, Get , Post, Put, UseInterceptors , HttpException, HttpStatus, UseFilters} from '@nestjs/common';
 import { ClassSerializerInterceptor } from '@nestjs/common';
 import { AllExceptionsFilter } from 'src/middleware/allExceptionsFilter';
-import { FindByIdDto } from 'src/user/dto/findUserById.dto';
+import { FindByIdDto } from 'src/base/dto/findEntityById.dto';
 
 @Controller()
 @UseFilters(AllExceptionsFilter)
