@@ -38,7 +38,7 @@ export abstract class BaseController<T , DTO> {
   @Put(':id')
   update(@Param('id') id: string, @Body() dto: Partial<DTO>): Promise<T>{
     try {
-        return this.service.updateUser(id, dto);
+        return this.service.update(id, dto);
     } catch(error) {
         this.logError('update', error);
         throw error;
