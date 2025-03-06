@@ -14,11 +14,11 @@ export abstract class BaseController<T , DTO> {
     console.error(`Error in [${this.constructor.name}].[${methodName}]:`, error);
   }
 
-  @UseInterceptors(ClassSerializerInterceptor)
   @Get(':id')
   async findOne(@Param() params: FindByIdDto): Promise<T> {
     try {
-        return await this.service.findOne(params.id);
+        const entity = await this.service.findOne(params.id);
+        return entity;
     } catch(error) {
         this.logError('findOne', error);
         throw error;

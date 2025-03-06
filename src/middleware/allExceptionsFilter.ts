@@ -1,5 +1,6 @@
 import { ExceptionFilter, Catch, ArgumentsHost, HttpException, HttpStatus, BadRequestException, NotFoundException } from '@nestjs/common';
 import { Request, Response } from 'express';
+import { MongoError } from 'mongodb';
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
@@ -20,21 +21,24 @@ export class AllExceptionsFilter implements ExceptionFilter {
       status = HttpStatus.BAD_REQUEST; // 400
       message = exception.message;
     }
-    // Handle TypeORM specific errors
-    else if (exception instanceof Error && 'code' in exception) {
-      switch ((exception as any).code) {
-        case 'ER_DUP_ENTRY': // MySQL duplicate entry
-          status = HttpStatus.CONFLICT; // 409
-          message = 'Resource already exists';
-          break;
-        case 'ER_NO_REFERENCED_ROW': // Foreign key constraint
-        case 'ER_ROW_IS_REFERENCED':
-          status = HttpStatus.BAD_REQUEST; // 400
-          message = 'Invalid reference provided';
-          break;
-        default:
-          status = HttpStatus.INTERNAL_SERVER_ERROR; // 500
-          message = exception.message;
+    // Handle Mongoose CastError (e.g., invalid ObjectId)
+    else if (exception instanceof Error && exception.name === 'CastError') {
+      status = HttpStatus.BAD_REQUEST; // 400
+      message = 'Invalid data format: ' + exception.message;
+    }
+    // Handle MongoDB duplicate key errors
+    else if (exception instanceof MongoError && exception.code === 11000) {
+      status = HttpStatus.CONFLICT; // 409
+      message = 'Duplicate resource: ' + exception.message;
+    }
+    // Handle generic Errors with specific cases
+    else if (exception instanceof Error) {
+      message = exception.message;
+      // More robust checks (avoid string matching if possible)
+      if (exception instanceof Error && exception.message.includes('not found')) {
+        status = HttpStatus.NOT_FOUND; // 404
+      } else {
+        status = HttpStatus.INTERNAL_SERVER_ERROR; // 500
       }
     }
     // Handle generic Error objects

@@ -16,8 +16,8 @@ export class Logger {
   private title : string;
   private service : string;
   constructor() {
-    this.title = process.env.TITLE || "none";
-    this.service = 'zeus-login';
+    this.title = process.env.TITLE || "template";
+    this.service = 'template';
     this.logDir = `${process.cwd()}/logs`;
     this.environment = process.env.ELASTIC_APM_ENVIRONMENT ?? "staging";
     this.logFormat = winston.format.printf(({ level , message }) => {

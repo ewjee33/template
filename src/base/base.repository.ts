@@ -28,7 +28,8 @@ export abstract class BaseRepository<T extends Document, DTO> {
   async findOne(id: string , session: ClientSession | null = null): Promise<T | null> {
     try {
       const objectId = new Types.ObjectId(id.toString());
-      return await this.model.findById(objectId).session(session).exec(); // session is ClientSession | null
+      const entity = await this.model.findById(objectId).session(session).exec(); // session is ClientSession | null
+      return entity;
     } catch (error) {
       console.error(`Error finding entity:`, error);
       throw error;
