@@ -1,6 +1,6 @@
 // base.service.ts
-import { Injectable, Inject , ConflictException, Logger } from '@nestjs/common';
-import { CACHE_MANAGER , Cache } from '@nestjs/cache-manager';
+import { Injectable, Inject , CACHE_MANAGER , ConflictException, Logger, NotFoundException, InternalServerErrorException } from '@nestjs/common';
+import { Cache } from 'cache-manager'
 import { BaseRepository } from './base.repository';
 import { Document, ClientSession } from 'mongoose';
 
@@ -8,7 +8,7 @@ import { Document, ClientSession } from 'mongoose';
 export abstract class BaseService<T extends Document, DTO> {
   protected readonly logger = new Logger(this.constructor.name);
   constructor(
-    @Inject(CACHE_MANAGER) protected readonly cacheManager: Cache,
+    @Inject(CACHE_MANAGER) protected cacheManager: Cache,
     private readonly entityName: string,) {}
   
     protected abstract get repository(): BaseRepository<T, DTO>;
@@ -25,17 +25,19 @@ export abstract class BaseService<T extends Document, DTO> {
     );
   }
 
-  async findOne(id: string | number, session: ClientSession | null = null): Promise<T> {
+  async findOne(id: string , session: ClientSession | null = null): Promise<T> {
     return this.wrapAsyncOperation(
       async () => {
         const cacheKey = `${this.entityName}:${id}`;
         const lockKey = `${cacheKey}:lock`;
 
         // 1. Check cache first
-        let cachedResult: string | null;
+        let cachedResult: string | undefined;
         try {
           cachedResult = await this.cacheManager.get<string>(cacheKey);
           if (cachedResult) {
+            console.log("cachedResult");
+            console.log(cachedResult);
             return JSON.parse(cachedResult);
           }
         } catch (error: unknown) {
@@ -47,18 +49,29 @@ export abstract class BaseService<T extends Document, DTO> {
         try {
           // Type assertion for nx option; returns true if set, false if key existed
           const lockSet = await this.cacheManager.set(lockKey, '1', 10);
+          console.log("lockSet")
+          console.log(lockSet);
           acquiredLock = lockSet !== undefined && lockSet !== null; // Handle Redis-specific return
         } catch (error: unknown) {
           this.logger.warn(`Lock acquisition failed: ${(error instanceof Error ? error.message : String(error))}`);
         }
-
+        console.log("acquiredLock");
+        console.log(acquiredLock);
         if (acquiredLock) {
           try {
             // 3. Lock acquired: query DB and set cache
             const entity = await this.repository.findOne(id, session);
             this.ensureExists(entity, this.entityName);
             try {
-              await this.cacheManager.set(cacheKey, JSON.stringify(entity), 3600);
+              console.log("entity");
+              console.log(entity);
+              const result = await this.cacheManager.set(cacheKey, JSON.stringify(entity));
+              console.log("result");
+              console.log(result);
+              console.log("cached");
+              const result2 = await this.cacheManager.get(cacheKey);
+              console.log("result2");
+              console.log(result2);
             } catch (error: unknown) {
               this.logger.warn(`Cache set failed: ${(error instanceof Error ? error.message : String(error))}`);
             }
@@ -103,7 +116,7 @@ export abstract class BaseService<T extends Document, DTO> {
 
   protected ensureExists(entity: T | null, entityName: string): T {
     if (!entity) {
-      throw new ConflictException(`${entityName} not found`);
+      throw new NotFoundException(`${entityName} not found`);
     }
     return entity;
   }
@@ -125,8 +138,13 @@ export abstract class BaseService<T extends Document, DTO> {
     try {
       return await operation();
     } catch (error) {
+      // If it's a known HttpException, rethrow it as-is
+      if (error instanceof NotFoundException || error instanceof ConflictException) {
+        throw error; // Preserves 404 or 409 as intended
+      }
+      // For other errors, provide a generic InternalServerError (500)
       const errorMsg = error instanceof Error ? error.message : String(error);
-      throw new ConflictException(`${errorMessage}: ${errorMsg}`);
+      throw new InternalServerErrorException(`${errorMessage}: ${errorMsg}`);
     }
   }
 }

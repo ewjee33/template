@@ -15,7 +15,7 @@ async function bootstrap() {
   }));
   const responseLoggingMiddleware = app.get(ResponseLoggingMiddleware);
   app.use(responseLoggingMiddleware.use.bind(responseLoggingMiddleware));
-  app.useGlobalFilters(new AllExceptionsFilter());
+  //app.useGlobalFilters(new AllExceptionsFilter());
   await app.listen(Number(process.env.PORTNUMBER) || 3000);
 }
 bootstrap();

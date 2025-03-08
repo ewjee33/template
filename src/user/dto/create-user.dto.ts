@@ -1,21 +1,28 @@
-// src/users/dto/create-user.dto.ts
-import { IsString, IsEmail, MinLength } from 'class-validator';
+import { IsString, MinLength, IsEmail, IsBoolean, IsOptional } from 'class-validator';
 
 export class CreateUserDto {
   @IsString()
   @MinLength(3)
-  readonly username: string;
+  readonly userId!: string;
 
   @IsEmail()
-  readonly email: string;
+  readonly email!: string;
 
   @IsString()
   @MinLength(8)
-  readonly password: string;
+  readonly password!: string;
 
-  constructor(username: string, email: string, password: string) {
-    this.username = username;
-    this.email = email;
-    this.password = password;
-  }
+  @IsString()
+  readonly consumerId!: string;
+
+  @IsString()
+  readonly keyId!: string;
+
+  @IsBoolean()
+  @IsOptional()
+  readonly isCheater?: boolean;
+
+  @IsBoolean()
+  @IsOptional()
+  readonly deleted?: boolean;
 }
